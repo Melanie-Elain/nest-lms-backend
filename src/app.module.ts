@@ -1,17 +1,27 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthModule } from './iam/auth/auth.module';
-import { UsersModule } from './iam/users/users.module';
-import { CoursesModule } from './learning/courses/courses.module';
-import { LessonsModule } from './learning/lessons/lessons.module';
-import { EnrollmentsModule } from './learning/enrollments/enrollments.module';
-import { QuizzesModule } from './examination/quizzes/quizzes.module';
-import { SubmissionsModule } from './examination/submissions/submissions.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [AuthModule, UsersModule, CoursesModule, LessonsModule, EnrollmentsModule, QuizzesModule, SubmissionsModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    // Đọc file .env
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    // Kết nối Postgres
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DB_HOST', 'localhost'),
+        port: config.get<number>('DB_PORT', 5432),
+        username: config.get<string>('DB_USERNAME', 'postgres'),
+        password: config.get<string>('DB_PASSWORD'), // Password bạn đặt lúc cài Postgres
+        database: config.get<string>('DB_NAME', 'nest_lms_db'),
+        autoLoadEntities: true, 
+        synchronize: false, // Để false vì bạn đã có file SQL, tránh NestJS làm hỏng cấu trúc bảng
+      }),
+    }),
+  ],
 })
 export class AppModule {}
