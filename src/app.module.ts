@@ -19,7 +19,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         password: config.get<string>('DB_PASSWORD'), // Password bạn đặt lúc cài Postgres
         database: config.get<string>('DB_NAME', 'nest_lms_db'),
         autoLoadEntities: true, 
-        synchronize: false, // Để false vì bạn đã có file SQL, tránh NestJS làm hỏng cấu trúc bảng
+        synchronize: true, // Để false vì bạn đã có file SQL, tránh NestJS làm hỏng cấu trúc bảng
       }),
     }),
   ],
