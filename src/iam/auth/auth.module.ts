@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
+import { RolesGuard } from './guards/roles.guard';  
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { UsersModule } from '../users/users.module';
       signOptions: { expiresIn: '1d' }, // Token có hạn trong 1 ngày
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, RolesGuard],
   controllers: [AuthController]
 })
 export class AuthModule {}
