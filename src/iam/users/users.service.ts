@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity'; // Đường dẫn tới file entity bạn tạo lúc nãy
+import { User } from './entities/user.entity'; 
 import { CreateUserDto } from './dto/create-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -13,11 +14,13 @@ export class UsersService {
 
   // Hàm xử lý đăng ký người dùng
   async create(createUserDto: CreateUserDto) {
-    // 1. Tạo một thực thể người dùng mới từ dữ liệu DTO
-    const newUser = this.usersRepository.create(createUserDto);
-
-    // 2. Lưu thực thể này vào Database
-    // await giúp đợi lệnh lưu xong mới chạy tiếp
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    
+    const newUser = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword, // Lưu mật khẩu đã mã hóa
+    });
     return await this.usersRepository.save(newUser);
   }
 
@@ -25,4 +28,12 @@ export class UsersService {
   async findAll() {
     return await this.usersRepository.find();
   }
+
+  async findOneByEmail(email: string) {
+    return await this.usersRepository.findOne({ 
+      where: { email },
+      select: ['id', 'email', 'password', 'fullName', 'role'] 
+    });
+  }
+
 }

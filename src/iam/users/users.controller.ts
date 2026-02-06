@@ -1,9 +1,12 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UsersService } from './users.service'; // 1. Import Service
+import { UsersService } from './users.service'; 
+
 
 @ApiTags('Users')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   // 2. Khai báo Service trong constructor
@@ -21,9 +24,21 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard) // <--- Thêm dòng này để khóa API lại
   @ApiOperation({ summary: 'Lấy danh sách người dùng' })
-  async findAll() {
-    // 4. Gọi hàm findAll của Service để lấy dữ liệu thực từ DB
-    return await this.usersService.findAll();
+  findAll() {
+  return this.usersService.findAll();
   }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  getProfile(@Req() req) {
+    // Thông tin user nằm trong req.user do JwtAuthGuard gán vào
+    return {
+      message: 'Đây là thông tin của bạn bóc tách từ Token',
+      user: req.user, 
+    };
+  }
+  
 }
