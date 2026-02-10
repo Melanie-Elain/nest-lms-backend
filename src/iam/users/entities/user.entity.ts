@@ -8,10 +8,10 @@ export class User {
   @Column({ unique: true, nullable: false })
   email: string;
 
-  @Column({ select: false }) // select: false để bảo mật, không hiện password khi lấy data
+  @Column({ select: false}) // select: false để bảo mật, không hiện password khi lấy data
   password: string;
 
-  @Column({ name: 'full_name' })
+  @Column({ name: 'full_name'})
   fullName: string;
 
   @Column({ nullable: true })
