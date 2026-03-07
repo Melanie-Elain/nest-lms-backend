@@ -32,4 +32,7 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ name: 'full_name', nullable: true })
+  full_name: string;
 }
