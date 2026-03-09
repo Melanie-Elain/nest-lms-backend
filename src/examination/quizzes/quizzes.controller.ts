@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { QuizzesService } from './quizzes.service';
@@ -6,6 +6,7 @@ import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { JwtAuthGuard } from 'src/iam/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/iam/auth/guards/roles.guard';
 import { Roles } from 'src/iam/auth/decorators/roles.decorator';
+import { SubmitQuizDto } from './dto/submit-quiz.dto';
 
 @ApiTags('Quizzes - Quản lý Đề thi') // Gom nhóm trong Swagger
 @ApiBearerAuth() // Hiện nút Authorize trong Swagger
@@ -47,5 +48,16 @@ export class QuizzesController {
   @ApiOperation({ summary: 'Xóa đề thi' })
   remove(@Param('id') id: string) {
     return this.quizzesService.remove(+id);
+  }
+
+  @Post(':id/submit')
+  @UseGuards(JwtAuthGuard) 
+  @ApiOperation({ summary: 'Nộp bài thi và nhận điểm tự động' })
+  submitQuiz(
+    @Param('id') id: string, 
+    @Body() submitQuizDto: SubmitQuizDto,
+    @Request() req
+  ) {
+    return this.quizzesService.submitQuiz(+id, submitQuizDto, req.user);
   }
 }
