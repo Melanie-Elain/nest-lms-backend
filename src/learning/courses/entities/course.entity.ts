@@ -1,18 +1,33 @@
-// import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-// import { Lesson } from '../../lessons/entities/lesson.entity'; // Đường dẫn tới file lesson
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { User } from '../../../iam/users/entities/user.entity'; // Đường dẫn tới Entity của SV1
 
-// @Entity('courses')
-// export class Course {
-//   @PrimaryGeneratedColumn()
-//   id: number;
+@Entity('courses')
+export class Course {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-//   @Column()
-//   title: string;
+  @Column()
+  title: string;
 
-//   @Column({ nullable: true })
-//   description: string;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
-//   // Quan hệ 1 khóa học - nhiều bài học
-//   @OneToMany(() => Lesson, (lesson) => lesson.course)
-//   lessons: Lesson[];
-// }
+  @Column({ nullable: true })
+  thumbnail: string;
+
+  @Column({ default: 0 })
+  price: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  // Một Instructor (User) có thể tạo nhiều Course
+  @ManyToOne(() => User, (user) => user.id)
+  instructor: User;
+
+  @Column()
+  instructorId: number;
+}
