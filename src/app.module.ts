@@ -5,6 +5,8 @@ import { UsersModule } from './iam/users/users.module';
 import { AuthModule } from './iam/auth/auth.module';
 import { ExaminationModule } from './examination/examination.module';
 import { CoursesModule } from './learning/courses/courses.module';
+import { SectionsModule } from './learning/sections/sections.module';
+import { LessonsModule } from './learning/lessons/lessons.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { CoursesModule } from './learning/courses/courses.module';
     AuthModule,
     ExaminationModule,
     CoursesModule,
+    SectionsModule,
+    LessonsModule
   ],
 })
 export class AppModule {}
