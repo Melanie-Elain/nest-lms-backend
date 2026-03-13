@@ -1,18 +1,23 @@
-import {Injectable, NotFoundException} from '@nestjs/common';
+import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
 import {CreateQuizDto} from './dto/create-quiz.dto';
 import {Quiz} from './entities/quiz.entity';
 import {InjectRepository} from '@nestjs/typeorm';
-import {Repository} from 'typeorm';
+import {In, IsNull, Repository} from 'typeorm';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { Submission } from '../submissions/entities/submission.entity';
 import { SubmissionAnswer } from '../submissions/entities/submission-answer.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { Question } from '../questions/entities/question.entity';
+import { AddBankQuestionsDto } from './dto/add-bank-questions.dto';
 
 @Injectable()
 export class QuizzesService {
   constructor(
     @InjectRepository(Quiz)
     private readonly quizRepository: Repository<Quiz>,
+
+    @InjectRepository(Question)
+    private readonly questionRepository: Repository<Question>,
 
     @InjectRepository(Submission)
     private submissionRepository: Repository<Submission>,
@@ -128,6 +133,50 @@ export class QuizzesService {
       maxScore: maxPossibleScore,
       finalScore: Number(finalScore.toFixed(2)), // Làm tròn 2 chữ số thập phân
       isPassed: finalScore >= quiz.passScore // So sánh với điểm chuẩn để qua môn
+    };
+  }
+
+  // 6. THÊM CÂU HỎI TỪ NGÂN HÀNG VÀO ĐỀ THI (CLONE)
+  // ==========================================================
+  async addQuestionsFromBank(quizId: number, dto: AddBankQuestionsDto) {
+    // 6.1. Kiểm tra đề thi có tồn tại không
+    const quiz = await this.quizRepository.findOne({ where: { id: quizId } });
+    if (!quiz) throw new NotFoundException('Không tìm thấy đề thi này');
+
+    // 6.2. Lấy các câu hỏi GỐC từ ngân hàng (chỉ lấy những câu có quiz_id là null)
+    const bankQuestions = await this.questionRepository.find({
+      where: { 
+        id: In(dto.questionIds), 
+        quiz: IsNull() // Đảm bảo nó thực sự nằm trong kho
+      },
+      relations: ['options'],
+    });
+
+    if (bankQuestions.length === 0) {
+      throw new BadRequestException('Không tìm thấy câu hỏi hợp lệ trong Ngân hàng');
+    }
+
+    // 6.3. Tiến hành CLONE (Nhân bản)
+    const newQuestionsToSave = bankQuestions.map(bankQ => {
+      return this.questionRepository.create({
+        content: bankQ.content,
+        points: bankQ.points,
+        type: bankQ.type,
+        quiz: { id: quizId }, // Gán bản clone này cho Đề thi hiện tại
+        
+        // Clone luôn danh sách đáp án
+        options: bankQ.options.map(opt => ({
+          content: opt.content,
+          isCorrect: opt.isCorrect
+        }))
+      });
+    });
+
+    // 6.4. Lưu toàn bộ bản Clone vào Database
+    await this.questionRepository.save(newQuestionsToSave);
+
+    return {
+      message: `Đã sao chép thành công ${newQuestionsToSave.length} câu hỏi từ Ngân hàng vào Đề thi.`,
     };
   }
 }

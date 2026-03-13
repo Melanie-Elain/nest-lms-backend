@@ -7,6 +7,7 @@ import { JwtAuthGuard } from 'src/iam/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/iam/auth/guards/roles.guard';
 import { Roles } from 'src/iam/auth/decorators/roles.decorator';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { AddBankQuestionsDto } from './dto/add-bank-questions.dto';
 
 @ApiTags('Quizzes - Quản lý Đề thi') // Gom nhóm trong Swagger
 @ApiBearerAuth() // Hiện nút Authorize trong Swagger
@@ -59,5 +60,16 @@ export class QuizzesController {
     @Request() req
   ) {
     return this.quizzesService.submitQuiz(+id, submitQuizDto, req.user);
+  }
+
+  @Post(':id/questions/from-bank')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'INSTRUCTOR') 
+  @ApiOperation({ summary: 'Thêm nhiều câu hỏi từ Ngân hàng vào Đề thi' })
+  addQuestionsFromBank(
+    @Param('id') id: string, 
+    @Body() dto: AddBankQuestionsDto
+  ) {
+    return this.quizzesService.addQuestionsFromBank(+id, dto);
   }
 }
