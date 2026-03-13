@@ -8,6 +8,7 @@ import { RolesGuard } from 'src/iam/auth/guards/roles.guard';
 import { Roles } from 'src/iam/auth/decorators/roles.decorator';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { AddBankQuestionsDto } from './dto/add-bank-questions.dto';
+import { QuizValidationPipe } from './pipes/quiz-validation.pipe';
 
 @ApiTags('Quizzes - Quản lý Đề thi') // Gom nhóm trong Swagger
 @ApiBearerAuth() // Hiện nút Authorize trong Swagger
@@ -19,7 +20,7 @@ export class QuizzesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles ('ADMIN', 'INSTRUCTOR') 
   @ApiOperation({ summary: 'Tạo đề thi mới (Kèm câu hỏi & đáp án)' })
-  create(@Body() createQuizDto: CreateQuizDto) {
+  create(@Body(new QuizValidationPipe()) createQuizDto: CreateQuizDto) {
     return this.quizzesService.create(createQuizDto);
   }
 

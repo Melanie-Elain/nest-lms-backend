@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { QuestionType } from "src/examination/questions/entities/question.entity";
+import { Min, Max } from 'class-validator';
 
 export class CreateOptionDto {
   @ApiProperty({ example: 'NestJS là một framework Node.js' })
@@ -62,6 +63,8 @@ export class CreateQuizDto {
 
   @ApiProperty({ example: 15, description: 'Thời gian làm bài (phút)' })
   @IsNumber()
+  @Min(5, { message: 'Thời gian thi tối thiểu là 5 phút' })
+  @Max(180, { message: 'Thời gian thi tối đa là 180 phút' })
   timeLimit: number;
 
   @ApiProperty({ example: 50, description: 'Điểm đạt tối thiểu (Ví dụ: 50/100)' })
