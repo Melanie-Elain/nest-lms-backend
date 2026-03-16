@@ -58,4 +58,14 @@ export class SubmissionsController {
     // Lưu ý: Dùng req.user.sub hoặc req.user.id tùy theo payload Token của bạn
     return this.submissionsService.getSubmissionDetail(+id, req.user.sub);
   }
+  // ==========================================================
+  // API 5: Giáo viên xem danh sách bài nộp của 1 đề thi
+  // ==========================================================
+  @Get('quiz/:quizId/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'INSTRUCTOR') // 👈 QUAN TRỌNG: Lần này cấm Học sinh, chỉ cho Giáo viên/Admin
+  @ApiOperation({ summary: 'Giáo viên xem thống kê và tất cả bài nộp của một đề thi' })
+  getQuizSubmissions(@Param('quizId') quizId: string) {
+    return this.submissionsService.getQuizSubmissions(+quizId);
+  }
 }

@@ -201,4 +201,52 @@ export class SubmissionsService {
       details: detailedResults
     };
   }
+
+  // ==========================================================
+  // 5. GIÁO VIÊN XEM DANH SÁCH BÀI NỘP CỦA 1 ĐỀ THI
+  // ==========================================================
+  async getQuizSubmissions(quizId: number) {
+    // 1. Kiểm tra đề thi có tồn tại không
+    const quiz = await this.quizRepo.findOne({ where: { id: quizId } });
+    if (!quiz) {
+      throw new NotFoundException('Không tìm thấy đề thi này!');
+    }
+
+    // 2. Lấy toàn bộ bài nộp của đề thi này (Sắp xếp điểm cao nhất lên đầu)
+    const submissions = await this.submissionRepo.find({
+      where: { quiz: { id: quizId } },
+      order: { score: 'DESC' }, 
+      // relations: ['user'], // Bỏ comment dòng này nếu Entity Submission của bạn đã có @ManyToOne với bảng User
+    });
+
+    // 3. Tính toán thống kê lớp học
+    const totalSubmissions = submissions.length;
+    const passedCount = submissions.filter(sub => sub.score !== null && sub.score >= quiz.passScore).length;
+    
+    // Tính điểm trung bình an toàn (Tránh chia cho 0)
+    const averageScore = totalSubmissions > 0 
+      ? (submissions.reduce((sum, sub) => sum + Number(sub.score), 0) / totalSubmissions).toFixed(2)
+      : 0;
+
+    // 4. Định dạng lại dữ liệu trả về
+    return {
+      message: `Lấy danh sách bài nộp của đề thi: ${quiz.title}`,
+      statistics: {
+        totalSubmissions: totalSubmissions,
+        passedCount: passedCount,
+        failedCount: totalSubmissions - passedCount,
+        averageScore: Number(averageScore),
+      },
+      data: submissions.map(sub => ({
+        submissionId: sub.id,
+        userId: sub.userId, 
+        score: sub.score,
+        isPassed: sub.score !== null ? sub.score >= quiz.passScore : false,
+        timeTakenMinutes: sub.completedAt 
+          ? Math.floor((sub.completedAt.getTime() - sub.startedAt.getTime()) / 60000)
+          : 0,
+        submittedAt: sub.completedAt,
+      }))
+    };
+  }
 }
