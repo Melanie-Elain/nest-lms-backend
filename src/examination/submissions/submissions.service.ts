@@ -130,4 +130,75 @@ export class SubmissionsService {
       data: formattedHistory // Trả về mảng đã được thêm isPassed
     };
   }
+
+  // ==========================================================
+  // 4. XEM CHI TIẾT BÀI LÀM (Đúng/Sai từng câu)
+  // ==========================================================
+  async getSubmissionDetail(submissionId: number, userId: number) {
+    // 1. Lấy bài làm của học sinh (Kèm theo danh sách các câu đã chọn)
+    const submission = await this.submissionRepo.findOne({
+      where: { id: submissionId, userId: userId }, // Bắt buộc check userId để không xem trộm bài người khác
+      relations: ['quiz', 'answers'], // Bảng answers của bạn đã được map OneToMany
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Không tìm thấy bài làm này hoặc bạn không có quyền xem!');
+    }
+
+    // 2. Lấy bộ đề thi gốc (Kèm câu hỏi và đáp án chuẩn)
+    const quiz = await this.quizRepo.findOne({
+      where: { id: submission.quiz.id },
+      relations: ['questions', 'questions.options'],
+    });
+
+    if (!quiz) {
+      throw new NotFoundException('Không tìm thấy đề thi gốc để so sánh!');
+    }
+
+    // 3. THUẬT TOÁN "XÀO NẤU" DỮ LIỆU
+    // Trộn câu hỏi gốc với đáp án học sinh đã chọn
+    const detailedResults = quiz.questions.map((question) => {
+      const studentAnswer = submission.answers.find(a => a.questionId === question.id);
+
+      const correctOptionIds = question.options
+        .filter(opt => opt.isCorrect)
+        .map(opt => opt.id);
+
+      // SỬA TẠI ĐÂY: Ép kiểu về String trước khi split để hết báo đỏ
+      let selectedIds: number[] = [];
+      if (studentAnswer && studentAnswer.selectedOptionId) {
+        selectedIds = String(studentAnswer.selectedOptionId)
+          .split(',')
+          .map(Number);
+      }
+
+      return {
+        questionId: question.id,
+        content: question.content,
+        points: question.points,
+        selectedOptionIds: selectedIds,
+        correctOptionIds: correctOptionIds,
+        // SỬA TẠI ĐÂY: Dùng dấu hỏi chấm (?) để an toàn hơn
+        isCorrect: studentAnswer?.isCorrect ?? false,
+        options: question.options.map(opt => ({
+          id: opt.id,
+          content: opt.content,
+        }))
+      };
+    });
+
+    // 4. Gói ghém tất cả trả về
+    return {
+      message: 'Lấy chi tiết bài làm thành công',
+      overview: {
+        submissionId: submission.id,
+        score: submission.score,
+        isPassed: submission.score !== null ? submission.score >= quiz.passScore : false,
+        timeTakenMinutes: submission.completedAt 
+          ? Math.floor((submission.completedAt.getTime() - submission.startedAt.getTime()) / 60000)
+          : 0
+      },
+      details: detailedResults
+    };
+  }
 }

@@ -49,4 +49,13 @@ export class SubmissionsController {
   getStudentHistory(@Req() req: any) {
     return this.submissionsService.getStudentHistory(req.user.sub);
   }
+
+  @Get(':id/detail')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT') // Chỉ cho phép học sinh xem bài của chính mình
+  @ApiOperation({ summary: 'Xem chi tiết kết quả đúng/sai của từng câu hỏi trong một bài làm' })
+  getSubmissionDetail(@Param('id') id: string, @Req() req: any) {
+    // Lưu ý: Dùng req.user.sub hoặc req.user.id tùy theo payload Token của bạn
+    return this.submissionsService.getSubmissionDetail(+id, req.user.sub);
+  }
 }

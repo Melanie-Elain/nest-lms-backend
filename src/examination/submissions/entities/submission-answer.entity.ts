@@ -29,4 +29,7 @@ export class SubmissionAnswer {
   @ManyToOne(() => Option)
   @JoinColumn({ name: 'selected_option_id' })
   selectedOption: Option;
+
+  @Column({ name: 'is_correct', default: false })
+  isCorrect: boolean;
 }
