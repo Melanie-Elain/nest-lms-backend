@@ -84,4 +84,50 @@ export class SubmissionsService {
       timeTaken: Math.floor(timeTakenMinutes) + ' phút'
     };
   }
+
+
+  async getStudentHistory(userId: number) {
+    const history = await this.submissionRepo.find({
+      where: { userId: userId },
+      relations: ['quiz'], 
+      order: { startedAt: 'DESC' }, 
+      select: {
+        id: true,
+        score: true,
+        // ĐÃ XÓA isPassed Ở ĐÂY CHO KHỎI BÁO LỖI
+        startedAt: true,
+        completedAt: true,
+        quiz: {
+          id: true,
+          title: true, 
+          passScore: true,
+        }
+      }
+    });
+
+    if (!history || history.length === 0) {
+      return {
+        message: 'Bạn chưa tham gia bài thi nào.',
+        data: []
+      };
+    }
+
+    // TÍNH TOÁN ĐẬU/RỚT ĐỘNG (Dynamic calculation)
+    const formattedHistory = history.map(sub => {
+      // Lấy điểm chuẩn của đề thi (nếu không có thì mặc định là 0)
+      const passScore = sub.quiz?.passScore || 0;
+      
+      return {
+        ...sub,
+        // Nếu điểm của học sinh lớn hơn hoặc bằng điểm chuẩn -> Đậu (true)
+        isPassed: sub.score !== null ? (sub.score >= passScore) : false
+      };
+    });
+
+    return {
+      message: 'Lấy lịch sử làm bài thành công!',
+      total: formattedHistory.length,
+      data: formattedHistory // Trả về mảng đã được thêm isPassed
+    };
+  }
 }

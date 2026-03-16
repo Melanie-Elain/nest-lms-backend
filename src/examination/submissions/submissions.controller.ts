@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Param, Body, UseGuards, Req, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { SubmissionsService } from './submissions.service';
@@ -40,5 +40,13 @@ export class SubmissionsController {
     @Body() dto: SubmitQuizDto
   ) {
     return this.submissionsService.submitQuiz(+quizId, +submissionId, dto);
+  }
+
+  @Get('history')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT') // Chỉ học sinh mới xem được lịch sử của chính mình
+  @ApiOperation({ summary: 'Xem lịch sử các bài thi đã làm của học sinh' })
+  getStudentHistory(@Req() req: any) {
+    return this.submissionsService.getStudentHistory(req.user.sub);
   }
 }
