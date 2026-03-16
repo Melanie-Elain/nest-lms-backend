@@ -20,8 +20,6 @@ export class QuizValidationPipe implements PipeTransform {
         }
       });
 
-      // 2. Bắt lỗi: Điểm đỗ cao hơn điểm tổng
-      // (Tránh trường hợp bài thi có 10 điểm mà bắt học sinh được 15 điểm mới đỗ)
       if (value.passScore > totalPoints) {
         throw new BadRequestException(
           `Lỗi logic: Điểm đỗ yêu cầu (${value.passScore}) đang lớn hơn tổng điểm của tất cả câu hỏi cộng lại (${totalPoints})!`
@@ -29,7 +27,6 @@ export class QuizValidationPipe implements PipeTransform {
       }
     }
 
-    // Nếu vượt qua mọi bài test, trả dữ liệu nguyên vẹn cho Controller đi tiếp
     return value;
   }
 }
