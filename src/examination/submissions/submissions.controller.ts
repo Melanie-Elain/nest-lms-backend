@@ -63,7 +63,7 @@ export class SubmissionsController {
   // ==========================================================
   @Get('quiz/:quizId/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'INSTRUCTOR') // 👈 QUAN TRỌNG: Lần này cấm Học sinh, chỉ cho Giáo viên/Admin
+  @Roles('ADMIN', 'INSTRUCTOR') 
   @ApiOperation({ summary: 'Giáo viên xem thống kê và tất cả bài nộp của một đề thi' })
   getQuizSubmissions(@Param('quizId') quizId: string) {
     return this.submissionsService.getQuizSubmissions(+quizId);

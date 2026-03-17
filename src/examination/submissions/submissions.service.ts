@@ -5,12 +5,18 @@ import { Any, Repository } from 'typeorm';
 import { Submission } from './entities/submission.entity';
 import { Quiz } from '../quizzes/entities/quiz.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { User } from 'src/iam/users/entities/user.entity';
 
 @Injectable()
 export class SubmissionsService {
   constructor(
     @InjectRepository(Submission) private readonly submissionRepo: Repository<Submission>,
     @InjectRepository(Quiz) private readonly quizRepo: Repository<Quiz>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+    @InjectQueue('email-queue') private readonly emailQueue: Queue,
   ) {}
 
   async startQuiz(quizId: number, userId: number) {
@@ -77,8 +83,28 @@ export class SubmissionsService {
 
     await this.submissionRepo.save(submission);
 
+    // ==========================================
+    // TÍCH HỢP TÌM EMAIL USER THẬT (MỚI THÊM)
+    // ==========================================
+    // Lưu ý: Mình giả định trong entity Submission của bạn có cột 'userId'. 
+    // Nếu bạn đặt tên khác (như studentId), hãy sửa lại chữ 'userId' cho khớp nhé.
+    const user = await this.userRepo.findOne({ where: { id: submission.userId } });
+    
+    if (user && user.email) {
+      // Nếu tìm thấy user và user có email, ném job gửi mail vào Hàng đợi
+      await this.emailQueue.add('send-score-email', {
+        email: user.email, // Lấy email động từ Database
+        submissionId: submissionId,
+        score: totalScore,
+        message: 'Chúc mừng bạn đã hoàn thành bài thi!',
+      });
+    } else {
+      // Nếu không tìm thấy, có thể in ra log để debug chứ không chặn việc trả kết quả nộp bài
+      console.warn(`Không tìm thấy email cho userId: ${submission.userId} để gửi thông báo điểm.`);
+    }
+
     return {
-      message: 'Nộp bài thành công!',
+      message: 'Nộp bài thành công! Email thông báo đang được gửi.',
       score: totalScore,
       isPassed: totalScore >= quiz.passScore, 
       timeTaken: Math.floor(timeTakenMinutes) + ' phút'
