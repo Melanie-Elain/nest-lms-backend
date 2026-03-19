@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -19,8 +20,8 @@ export class AuthController {
 
   @Post('refresh-token')
   @ApiOperation({ summary: 'Làm mới token' })
-  async refresh(@Body('refreshToken') token: string) {
-    return this.authService.refreshToken(token);
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshToken(dto.refreshToken);
   }
 
   @Post('change-password')
@@ -38,5 +39,6 @@ export class AuthController {
     const token = authHeader.split(' ')[1];
     return this.authService.logout(token);
   }
+
 
 }
