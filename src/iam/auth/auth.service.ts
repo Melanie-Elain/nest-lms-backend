@@ -72,11 +72,16 @@ export class AuthService {
     // Chức năng Logout sử dụng Redis Blacklist
     async logout(token: string) {
       await this.cacheManager.set(`blacklist_${token}`, true, 3600);
-      return { message: 'Đăng xuất thành công' };
+
+      return { 
+        message: 'Đăng xuất thành công',
+        status: 'success'
+      };
     }
 
+    // Chức năng thay đổi mật khẩu
     async changePassword(userId: number, dto: ChangePasswordDto) {
-      const user = await this.usersService.findOne(userId); // Đã có hàm ở bước 2
+      const user = await this.usersService.findOne(userId); 
 
       const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
       if (!isMatch) throw new UnauthorizedException('Mật khẩu cũ không chính xác');
@@ -85,5 +90,6 @@ export class AuthService {
       
       return this.usersService.update(userId, { password: hashedNewPassword });
     }
+    
 
 }

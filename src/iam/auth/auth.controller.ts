@@ -1,7 +1,7 @@
-import { Controller, Post, Body, UseGuards, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Headers, UnauthorizedException, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -31,14 +31,25 @@ export class AuthController {
     return this.authService.changePassword(userId, dto);
   }
 
- @Post('logout')
+//  @Post('logout')
+//   @ApiOperation({ summary: 'Đăng xuất khỏi hệ thống' })
+//   @UseGuards(JwtAuthGuard)
+//   async logout(authHeader: string) {
+//     if (!authHeader) throw new UnauthorizedException('Missing Authorization Header');
+//     const token = authHeader.split(' ')[1];
+//     return this.authService.logout(token);
+//   }
+
+  @Post('logout')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Đăng xuất khỏi hệ thống' })
   @UseGuards(JwtAuthGuard)
-  async logout(@Headers('authorization') authHeader: string) {
-    if (!authHeader) throw new UnauthorizedException('Missing Authorization Header');
+  async logout(@Req() req: any) {
+    // JwtAuthGuard đã kiểm tra và xử lý token, ta chỉ cần lấy nó ra
+    const authHeader = req.headers.authorization;
+    if (!authHeader) throw new UnauthorizedException('Không tìm thấy Token');
     const token = authHeader.split(' ')[1];
     return this.authService.logout(token);
   }
-
 
 }
