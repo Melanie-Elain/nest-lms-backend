@@ -80,7 +80,7 @@ export class CoursesService {
         user: {
             id: true,
             email: true,
-            full_name: true, // Lấy đúng trường này từ Database của bạn
+            fullName: true, // Lấy đúng trường này từ Database của bạn
         }
         }
     });
@@ -89,7 +89,7 @@ export class CoursesService {
     if (members.length === 0) {
         return {
         courseTitle: course.title,
-        instructorName: course.instructor?.full_name || course.instructor?.email,
+        instructorName: course.instructor?.fullName || course.instructor?.email,
         message: 'Lớp học hiện tại chưa có thành viên nào tham gia.',
         data: []
         };
@@ -97,11 +97,11 @@ export class CoursesService {
 
     return {
         courseTitle: course.title,
-        instructorName: course.instructor?.full_name || course.instructor?.email,
+        instructorName: course.instructor?.fullName || course.instructor?.email,
         totalMembers: members.length,
         data: members.map(m => ({
         studentId: m.user.id,
-        studentName: m.user.full_name, // Hiển thị tên đầy đủ của sinh viên
+        studentName: m.user.fullName, // Hiển thị tên đầy đủ của sinh viên
         studentEmail: m.user.email,
         joinedAt: m.joinedAt
         }))

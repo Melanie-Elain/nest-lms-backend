@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, Request, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { QuizzesService } from './quizzes.service';
@@ -6,7 +6,9 @@ import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { JwtAuthGuard } from 'src/iam/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/iam/auth/guards/roles.guard';
 import { Roles } from 'src/iam/auth/decorators/roles.decorator';
-import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { AddBankQuestionsDto } from './dto/add-bank-questions.dto';
+import { QuizValidationPipe } from './pipes/quiz-validation.pipe';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
 @ApiTags('Quizzes - Quản lý Đề thi') // Gom nhóm trong Swagger
 @ApiBearerAuth() // Hiện nút Authorize trong Swagger
@@ -18,11 +20,14 @@ export class QuizzesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles ('ADMIN', 'INSTRUCTOR') 
   @ApiOperation({ summary: 'Tạo đề thi mới (Kèm câu hỏi & đáp án)' })
-  create(@Body() createQuizDto: CreateQuizDto) {
+  create(@Body(new QuizValidationPipe()) createQuizDto: CreateQuizDto) {
     return this.quizzesService.create(createQuizDto);
   }
 
   @Get()
+  @UseInterceptors(CacheInterceptor) // Bật Cache cho API này (Mặc định 60 giây, cấu hình ở AppModule)
+  @CacheKey('list_all_quizzes') // Đặt tên key Cache riêng cho API này
+  @CacheTTL(120) // Ghi đè TTL riêng cho API này: 120 giây (2 phút)
   @ApiOperation({ summary: 'Lấy danh sách tất cả đề thi' })
   findAll() {
     return this.quizzesService.findAll();
@@ -50,14 +55,16 @@ export class QuizzesController {
     return this.quizzesService.remove(+id);
   }
 
-  @Post(':id/submit')
-  @UseGuards(JwtAuthGuard) 
-  @ApiOperation({ summary: 'Nộp bài thi và nhận điểm tự động' })
-  submitQuiz(
+  
+
+  @Post(':id/questions/from-bank')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'INSTRUCTOR') 
+  @ApiOperation({ summary: 'Thêm nhiều câu hỏi từ Ngân hàng vào Đề thi' })
+  addQuestionsFromBank(
     @Param('id') id: string, 
-    @Body() submitQuizDto: SubmitQuizDto,
-    @Request() req
+    @Body() dto: AddBankQuestionsDto
   ) {
-    return this.quizzesService.submitQuiz(+id, submitQuizDto, req.user);
+    return this.quizzesService.addQuestionsFromBank(+id, dto);
   }
 }

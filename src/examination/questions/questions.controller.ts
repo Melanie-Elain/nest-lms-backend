@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { QuestionsService } from './questions.service';
 import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
@@ -6,6 +6,7 @@ import { CreateQuestionBankDto } from './dto/create-question-bank.dto';
 import { JwtAuthGuard } from 'src/iam/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/iam/auth/guards/roles.guard';
 import { Roles } from 'src/iam/auth/decorators/roles.decorator';
+import { QuizzesService } from '../quizzes/quizzes.service';
 
 
 @ApiTags('Questions Bank - Ngân hàng câu hỏi')
@@ -13,7 +14,9 @@ import { Roles } from 'src/iam/auth/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('questions/bank') 
 export class QuestionsController {
-  constructor(private readonly questionsService: QuestionsService) {}
+  constructor(private readonly questionsService: QuestionsService,
+    // private readonly quizzesService: QuizzesService
+    ) {}
 
   @Post()
   @Roles('ADMIN', 'INSTRUCTOR')
@@ -28,4 +31,6 @@ export class QuestionsController {
   getBankQuestions() {
     return this.questionsService.getQuestionBank();
   }
+
+  
 }

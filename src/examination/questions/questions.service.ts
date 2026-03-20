@@ -9,6 +9,7 @@ export class QuestionsService {
   constructor(
     @InjectRepository(Question)
     private readonly questionRepository: Repository<Question>,
+    
   ) {}
 
   async createBankQuestion(dto: CreateQuestionBankDto) {
@@ -29,4 +30,6 @@ export class QuestionsService {
       order: { id: 'DESC' }      
     });
   }
+
+  
 }

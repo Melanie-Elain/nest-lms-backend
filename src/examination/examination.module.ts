@@ -7,7 +7,8 @@ import { SubmissionsModule } from "./submissions/submissions.module";
     imports: [
       QuizzesModule,
       QuestionsModule,
-      SubmissionsModule
+      SubmissionsModule,
+      
     ]
   })
   export class ExaminationModule {}
