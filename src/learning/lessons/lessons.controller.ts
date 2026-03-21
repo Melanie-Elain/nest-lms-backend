@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Delete, UseGuards, ParseIntPipe, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, ParseIntPipe, Patch, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { LessonsService } from './lessions.service'
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -50,12 +50,12 @@ export class LessonsController {
   async remove(@Param('id', ParseIntPipe) id: number) {
     return await this.lessonsService.remove(id);
   }
-
-  @Post('upload')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('INSTRUCTOR', 'ADMIN')
-  @ApiConsumes('multipart/form-data') // Quan trọng để hiện nút chọn file
+@Post('upload')
+  @ApiBearerAuth() 
+  @UseGuards(JwtAuthGuard, RolesGuard) 
+  @Roles('INSTRUCTOR', 'ADMIN') 
+  @ApiOperation({ summary: 'Upload Video hoặc Tài liệu (Chỉ GV/Admin)' })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
       type: 'object',
@@ -66,18 +66,27 @@ export class LessonsController {
   })
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: './uploads', // File sẽ được lưu vào thư mục này
+      destination: './uploads',
       filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
       },
     }),
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(doc|docx|png|pdf|mp4|ppt|pptx)$/)) {
+        return cb(new BadRequestException('Định dạng tệp tin không hợp lệ!'), false);
+      }
+      cb(null, true);
+    },
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB
   }))
-  @ApiOperation({ summary: 'Upload Video hoặc Tài liệu (PDF/Doc)' })
   uploadFile(@UploadedFile() file: Express.Multer.File) {
-    // Trả về link để  copy
     return {
-      url: `http://localhost:3000/uploads/${file.filename}`
+      success: true,
+      url: `http://localhost:3000/uploads/${file.filename}`,
+      metadata: {
+        originalName: file.originalname,
+        mimeType: file.mimetype,      }
     };
   }
 

@@ -5,7 +5,8 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum LessonType {
   VIDEO = 'video',
   PDF = 'pdf',
-  QUIZ = 'quiz',
+  PPTX = 'pptx',
+  DOCX = 'docx'
 }
 
 @Entity('lessons')
