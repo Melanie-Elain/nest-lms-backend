@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export enum LessonType {
   VIDEO = 'video',
-  DOCUMENT = 'document',
+  PDF = 'pdf',
   QUIZ = 'quiz',
 }
 

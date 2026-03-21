@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lesson } from './entities/lesson.entity';
 import { CreateLessonDto } from './dto/create-lesson.dto';
+import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 @Injectable()
 export class LessonsService {
@@ -33,5 +34,17 @@ export class LessonsService {
   async remove(id: number) {
     const lesson = await this.findOne(id);
     return await this.lessonRepository.remove(lesson);
+  }
+
+  async update(id: number, updateLessonDto: UpdateLessonDto) {
+  const lesson = await this.findOne(id); // Kiểm tra bài học có tồn tại không
+  Object.assign(lesson, updateLessonDto); // Ghi đè dữ liệu mới vào bài cũ
+  return await this.lessonRepository.save(lesson);
+  }
+
+  async updateOrder(id: number, order: number) {
+  const lesson = await this.findOne(id);
+  lesson.order = order;
+  return await this.lessonRepository.save(lesson);
   }
 }
