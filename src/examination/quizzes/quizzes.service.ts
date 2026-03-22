@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
+import {BadRequestException, Inject, Injectable, NotFoundException} from '@nestjs/common';
 import {CreateQuizDto} from './dto/create-quiz.dto';
 import {Quiz} from './entities/quiz.entity';
 import {InjectRepository} from '@nestjs/typeorm';
@@ -8,6 +8,8 @@ import { Submission } from '../submissions/entities/submission.entity';
 import { SubmissionAnswer } from '../submissions/entities/submission-answer.entity';
 import { Question } from '../questions/entities/question.entity';
 import { AddBankQuestionsDto } from './dto/add-bank-questions.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class QuizzesService {
@@ -23,6 +25,8 @@ export class QuizzesService {
     
     @InjectRepository(SubmissionAnswer)
     private submissionAnswerRepository: Repository<SubmissionAnswer>,
+    
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
@@ -33,7 +37,12 @@ export class QuizzesService {
           options: q.options
         }))
       });
-    return await this.quizRepository.save(quiz);
+
+    const savedQuiz = await this.quizRepository.save(quiz); 
+    
+    await this.cacheManager.del('list_all_quizzes');
+    
+    return savedQuiz;
   }
 
   async findAll(): Promise<Quiz[]> {
@@ -63,11 +72,21 @@ export class QuizzesService {
        throw new Error('Could not update quiz');
     }
 
-    return this.quizRepository.save(updatedQuiz);
+    const savedQuiz = await this.quizRepository.save(updatedQuiz);
+
+    await this.cacheManager.del('all_quizzes'); 
+    await this.cacheManager.del(`quiz_detail_${id}`); 
+
+    return savedQuiz;
   }
 
   async remove(id: number) {
-    return this.quizRepository.delete(id);
+    const result = await this.quizRepository.delete(id);
+
+    await this.cacheManager.del('all_quizzes'); // <-- THÊM VÀO
+    await this.cacheManager.del(`quiz_detail_${id}`); // <-- THÊM VÀO
+
+    return result;
   }
 
   // 6. THÊM CÂU HỎI TỪ NGÂN HÀNG VÀO ĐỀ THI (CLONE)
@@ -108,6 +127,9 @@ export class QuizzesService {
 
     // 6.4. Lưu toàn bộ bản Clone vào Database
     await this.questionRepository.save(newQuestionsToSave);
+
+    await this.cacheManager.del('all_quizzes'); 
+    await this.cacheManager.del(`quiz_detail_${quizId}`);
 
     return {
       message: `Đã sao chép thành công ${newQuestionsToSave.length} câu hỏi từ Ngân hàng vào Đề thi.`,

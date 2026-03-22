@@ -38,19 +38,16 @@ import { ExpressAdapter } from '@bull-board/express';
       }),
     }),
 
-    // 3. CẤU HÌNH REDIS CACHE TOÀN CỤC (Mới thêm)
     CacheModule.registerAsync({
-      isGlobal: true, // Biến Cache thành Global, dùng được ở mọi Module mà không cần import lại
+      isGlobal: true, 
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        // Lấy link Redis từ file .env (REDIS_URL), nếu không có thì xài mặc định ở máy local
         store: createKeyv(config.get<string>('REDIS_URL', 'redis://localhost:6379')),
-        ttl: 60000, // Thời gian lưu Cache mặc định: 60 giây (60000 ms)
+        ttl: 60000, 
       }),
     }),
 
-    // 2. CẤU HÌNH BULLMQ TOÀN CỤC (Mới thêm)
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -71,7 +71,7 @@ export class AuthService {
 
     // Chức năng Logout sử dụng Redis Blacklist
     async logout(token: string) {
-      await this.cacheManager.set(`blacklist_${token}`, true, 3600);
+      await this.cacheManager.set(`blacklist_${token}`, true, 900000);
 
       return { 
         message: 'Đăng xuất thành công',

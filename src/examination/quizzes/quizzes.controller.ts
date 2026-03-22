@@ -25,9 +25,9 @@ export class QuizzesController {
   }
 
   @Get()
-  @UseInterceptors(CacheInterceptor) // Bật Cache cho API này (Mặc định 60 giây, cấu hình ở AppModule)
-  @CacheKey('list_all_quizzes') // Đặt tên key Cache riêng cho API này
-  @CacheTTL(120) // Ghi đè TTL riêng cho API này: 120 giây (2 phút)
+  @UseInterceptors(CacheInterceptor) 
+  @CacheKey('list_all_quizzes') 
+  @CacheTTL(120) 
   @ApiOperation({ summary: 'Lấy danh sách tất cả đề thi' })
   findAll() {
     return this.quizzesService.findAll();
