@@ -11,8 +11,8 @@ export class User {
   @Column({ select: false}) // select: false để bảo mật, không hiện password khi lấy data
   password: string;
 
-  @Column({ name: 'full_name'})
-  fullName: string;
+  @Column({ name: 'full_name', nullable: true })
+  full_name: string;
 
   @Column({ nullable: true })
   avatar: string;

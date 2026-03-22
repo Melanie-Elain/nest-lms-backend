@@ -1,10 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common'; // Dòng này sửa lỗi ValidationPipe
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'; // Dòng này sửa lỗi Swagger
+import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express'; // Quan trọng
+import { join } from 'path'; // Quan trọng
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // 1. Sửa dòng này để NestJS hiểu đây là ứng dụng Express (để dùng Static Assets)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // 2. Cấu hình để truy cập file (Video/PDF) từ thư mục 'uploads'
+  // Khi đó link sẽ có dạng: http://localhost:3000/uploads/ten-file.pdf
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // Cấu hình Validation toàn cục
   app.useGlobalPipes(new ValidationPipe({ 
@@ -24,7 +33,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  // Cho phép gọi API từ các nguồn khác (nếu sau này Hồng làm Frontend)
+  app.enableCors();
+
   await app.listen(process.env.PORT ?? 3000);
   console.log(`Application is running on: http://localhost:3000/api`);
+  console.log(`Static files are served at: http://localhost:3000/uploads/`);
 }
+
 bootstrap();

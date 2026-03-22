@@ -5,6 +5,8 @@ import { UsersModule } from './iam/users/users.module';
 import { AuthModule } from './iam/auth/auth.module';
 import { ExaminationModule } from './examination/examination.module';
 import { CoursesModule } from './learning/courses/courses.module';
+import { SectionsModule } from './learning/sections/sections.module';
+import { LessonsModule } from './learning/lessons/lessons.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { BullModule } from '@nestjs/bullmq';
@@ -88,6 +90,8 @@ import { ExpressAdapter } from '@bull-board/express';
     AuthModule,
     ExaminationModule,
     CoursesModule,
+    SectionsModule,
+    LessonsModule
   ],
 })
 export class AppModule {}
