@@ -76,6 +76,15 @@ export class CreateQuizDto {
   courseId: number;
 
   @ApiProperty({ 
+    example: 1, 
+    description: 'ID của chương học (Bỏ trống nếu là bài thi cuối khóa)', 
+    required: false 
+  })
+  @IsNumber()
+  @IsOptional() // Quan trọng: Để dùng chung cho cả Final Exam và Section Quiz
+  sectionId?: number;
+
+  @ApiProperty({ 
     type: [CreateQuestionDto],
     example: [
       {

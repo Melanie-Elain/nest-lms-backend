@@ -4,10 +4,12 @@ import { Course } from './entities/course.entity';
 import { CoursesService } from './courses.service';
 import { CoursesController } from './courses.controller';
 import { ClassMember } from './entities/class-member.entity';
+import { Section } from '../sections/entities/section.entity';
+import { SectionProgress } from '../sections/entities/section-progress.entity';
 
 @Module({
   // 1. Đăng ký Entity Course để Repository có thể hoạt động
-  imports: [TypeOrmModule.forFeature([Course , ClassMember])],
+  imports: [TypeOrmModule.forFeature([Course , ClassMember,Section,SectionProgress])],
   
   // 2. Khai báo Controller để nhận API
   controllers: [CoursesController],

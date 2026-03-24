@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, Delete, UseGuards, ParseIntPipe, Patch, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, ParseIntPipe, Patch, BadRequestException, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { LessonsService } from './lessions.service'
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -106,5 +106,14 @@ export class LessonsController {
     return await this.lessonsService.updateOrder(id, order);
   }
 
+  @Post(':id/complete')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Đánh dấu hoàn thành bài học (Gọi khi xem xong Video/PDF)' })
+  completeLesson(@Param('id') lessonId: string, @Req() req: any) {
+    // Truyền lessonId và req.user.sub vào Service
+    return this.lessonsService.markLessonAsCompleted(+lessonId, req.user.sub);
+  }
   
 }

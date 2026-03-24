@@ -3,10 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Lesson } from './entities/lesson.entity';
 import { LessonsService } from './lessions.service'
 import { LessonsController } from './lessons.controller';
+import { LessonProgress } from './entities/lesson-progress.entity';
 
 @Module({
   // 1. Đăng ký Entity Lesson để Repository có thể hoạt động trong Service
-  imports: [TypeOrmModule.forFeature([Lesson])],
+  imports: [TypeOrmModule.forFeature([Lesson, LessonProgress])],
 
   // 2. Khai báo Controller để NestJS lộ trình (route) các API ra Swagger UI
   controllers: [LessonsController],

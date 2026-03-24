@@ -10,10 +10,12 @@ import { EmailProcessor } from './email.processor';
 import { User } from 'src/iam/users/entities/user.entity';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { SectionsModule } from 'src/learning/sections/sections.module';
 
 
 @Module({
     imports: [TypeOrmModule.forFeature([Submission, SubmissionAnswer, Quiz, User]),
+      SectionsModule,
       BullModule.registerQueue({
         name: 'email-queue',
       }),

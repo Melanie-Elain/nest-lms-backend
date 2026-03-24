@@ -8,6 +8,7 @@ import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { User } from 'src/iam/users/entities/user.entity';
+import { SectionsService } from 'src/learning/sections/sections.service';
 
 @Injectable()
 export class SubmissionsService {
@@ -17,6 +18,7 @@ export class SubmissionsService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     @InjectQueue('email-queue') private readonly emailQueue: Queue,
+    private readonly sectionsService: SectionsService,
   ) {}
 
   async startQuiz(quizId: number, userId: number) {
@@ -77,12 +79,19 @@ export class SubmissionsService {
       });
     }
 
+    const isPassed = totalScore >= quiz.passScore;
+
     submission.score = totalScore;
     submission.completedAt = now;
     submission.answers = submissionAnswersToSave as any; 
 
     await this.submissionRepo.save(submission);
 
+    if (isPassed && quiz.sectionId) {
+      // Gọi ngầm hàm check để chốt sổ (không cần await để tránh làm chậm API)
+      this.sectionsService.evaluateSectionCompletion(submission.userId, quiz.sectionId)
+        .catch(err => console.error('Lỗi khi quét tiến độ chương:', err));
+    }
     // ==========================================
     // TÍCH HỢP TÌM EMAIL USER THẬT (MỚI THÊM)
     // ==========================================

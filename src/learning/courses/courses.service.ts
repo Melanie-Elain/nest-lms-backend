@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Course } from './entities/course.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { ClassMember } from './entities/class-member.entity'; 
+import { SectionProgress } from '../sections/entities/section-progress.entity';
+import { Section } from '../sections/entities/section.entity';
 
 @Injectable()
 export class CoursesService {
@@ -13,6 +15,12 @@ export class CoursesService {
 
     @InjectRepository(ClassMember) 
     private readonly classMemberRepository: Repository<ClassMember>,
+
+    @InjectRepository(Section)
+    private readonly sectionRepo: Repository<Section>,
+
+    @InjectRepository(SectionProgress)
+    private readonly sectionProgressRepo: Repository<SectionProgress>,
   ) {}
 
 // Tạo khóa học mới
@@ -106,5 +114,43 @@ export class CoursesService {
         joinedAt: m.joinedAt
         }))
     };
+    }
+
+    async checkFinalExamEligibility(userId: number, courseId: number) {
+      // 1. Đếm tổng số chương (Section) của khóa học này
+      const totalSections = await this.sectionRepo.count({
+        where: { courseId: courseId },
+      });
+  
+      if (totalSections === 0) {
+        return { isEligible: false, message: 'Khóa học chưa có nội dung.' };
+      }
+  
+      // 2. Đếm số chương mà học sinh này ĐÃ HOÀN THÀNH (isCompleted = true)
+      const completedSections = await this.sectionProgressRepo.count({
+        where: {
+          userId: userId,
+          isCompleted: true,
+          section: { courseId: courseId }, // Tận dụng relation join bảng
+        },
+        relations: ['section'],
+      });
+  
+      // 3. Tính toán tỷ lệ phần trăm
+      const progressRatio = completedSections / totalSections;
+      const progressPercentage = Math.round(progressRatio * 100);
+  
+      // 4. Quyết định: Lớn hơn hoặc bằng 80% (0.8) thì cho qua!
+      const isEligible = progressRatio >= 0.8;
+  
+      return {
+        isEligible,                     // true/false để Frontend khóa/mở nút bấm
+        progressPercentage,             // Trả về số % để FE hiển thị thanh tiến độ (Ví dụ: 85%)
+        completedSections,
+        totalSections,
+        message: isEligible 
+          ? 'Đủ điều kiện dự thi Final Exam!' 
+          : `Bạn mới hoàn thành ${progressPercentage}%. Cần đạt tối thiểu 80% để làm bài thi cuối khóa.`,
+      };
     }
 }

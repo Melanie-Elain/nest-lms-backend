@@ -10,7 +10,9 @@ import { ActiveUser } from '../../common/decorators/active-user.decorator';
 @ApiTags('Courses')
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(
+    private readonly coursesService: CoursesService,
+    ) {}
 // Tạo khóa học mới (Chỉ giảng viên và Admin mới được tạo)
   @Post()
   @ApiBearerAuth()
