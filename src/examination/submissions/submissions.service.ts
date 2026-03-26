@@ -7,8 +7,8 @@ import { Quiz } from '../quizzes/entities/quiz.entity';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { User } from 'src/iam/users/entities/user.entity';
-import { SectionsService } from 'src/learning/sections/sections.service';
+import { User } from '../../iam/users/entities/user.entity';
+import { SectionsService } from '../../learning/sections/sections.service';
 
 @Injectable()
 export class SubmissionsService {
