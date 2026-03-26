@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './iam/users/users.module';
@@ -13,6 +13,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -94,4 +95,13 @@ import { ExpressAdapter } from '@bull-board/express';
     LessonsModule
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  // CẤU HÌNH MIDDLEWARE
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(LoggerMiddleware)
+      .forRoutes('*'); // Áp dụng cho tất cả các đường dẫn
+  }
+}
+
+// export class AppModule {}

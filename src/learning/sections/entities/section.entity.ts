@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Course } from '../../courses/entities/course.entity'; 
-import { Lesson } from '../../lessons/entities/lesson.entity'; // Chú ý: Lesson viết hoa
+import { Lesson } from '../../lessons/entities/lesson.entity'; 
 
 @Entity('sections')
 export class Section {

@@ -12,11 +12,28 @@ export class LessonsService {
     private readonly lessonRepository: Repository<Lesson>,
   ) {}
 
-  async create(createLessonDto: CreateLessonDto) {
-    // Tạo bản ghi mới dựa trên DTO và lưu vào DB
-    const lesson = this.lessonRepository.create(createLessonDto);
-    return await this.lessonRepository.save(lesson);
-  }
+ async create(createLessonDto: CreateLessonDto) {
+  const { sectionId, ...lessonData } = createLessonDto;
+
+  // 1. Tìm bài học cuối cùng trong chương (Section) này
+  const lastLesson = await this.lessonRepository.findOne({
+    where: { section: { id: sectionId } },
+    order: { order: 'DESC' },
+  });
+
+  // 2. Tính toán số thứ tự tiếp theo
+  const nextOrder = lastLesson ? lastLesson.order + 1 : 1;
+
+  // 3. Khởi tạo thực thể mới với đầy đủ thông tin (bao gồm cả quan hệ section)
+  const lesson = this.lessonRepository.create({
+    ...lessonData,
+    order: nextOrder,
+    section: { id: sectionId } // Gán quan hệ để TypeORM tự hiểu khóa ngoại
+  });
+
+  // 4. Lưu vào Database
+  return await this.lessonRepository.save(lesson);
+}
 
   async findAllBySection(sectionId: number) {
     return await this.lessonRepository.find({
