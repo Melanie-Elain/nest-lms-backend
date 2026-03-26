@@ -18,7 +18,7 @@ export class SectionsService {
     @InjectRepository(LessonProgress) private lessonProgressRepo: Repository<LessonProgress>,
     @InjectRepository(Submission) private submissionRepo: Repository<Submission>,
     @InjectRepository(Quiz) private quizRepo: Repository<Quiz>,
-    @InjectRepository(SectionProgress) private lessonRepo: Repository<Lesson>,
+    @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
 
   ) {}
 
@@ -45,50 +45,88 @@ export class SectionsService {
   }
 
   async evaluateSectionCompletion(userId: number, sectionId: number) {
-    // 1. Kiểm tra điều kiện 1: Đã xem hết Lesson chưa?
-    const totalLessons = await this.lessonRepo.count({
-      where: { sectionId: sectionId } 
-    });
-    const completedLessons = await this.lessonProgressRepo.count({
-      where: { userId, lesson: { sectionId }, isCompleted: true }
-    });
-    const isAllLessonsDone = totalLessons > 0 && totalLessons === completedLessons;
+    console.log('------------------------------------------------');
+    console.log(`[BẮT ĐẦU CHECK] Section: ${sectionId} | User: ${userId}`);
+  
+    // 1. Đếm tổng số bài học trong section (dùng relation cho chắc)
+    const query = this.lessonRepo
+      .createQueryBuilder('lesson')
+      .innerJoin('lesson.section', 'section')
+      .where('section.id = :sectionId', { sectionId });
 
-    // 2. Kiểm tra điều kiện 2: Đã thi đậu Quiz của Section chưa?
-    const sectionQuiz = await this.quizRepo.findOne({ where: { sectionId } });
+    // 👉 DEBUG SQL ở đây
+    console.log('SQL totalLessons:', query.getSql());
+
+    // 👉 rồi mới execute
+    const totalLessons = await query.getCount();
+  
+    // 2. Đếm số bài đã hoàn thành
+    const completedCount = await this.lessonProgressRepo
+      .createQueryBuilder('lp')
+      .innerJoin('lp.lesson', 'lesson')
+      .innerJoin('lesson.section', 'section')
+      .where('lp.user_id = :userId', { userId })
+      .andWhere('lp.is_completed = true')
+      .andWhere('section.id = :sectionId', { sectionId })
+      .getCount();
+  
+    console.log(`=> Kết quả chuẩn: Tổng ${totalLessons} bài | Đã học xong ${completedCount} bài`);
+  
+    // 3. Kiểm tra Quiz
+    const sectionQuiz = await this.quizRepo.findOne({
+      where: { sectionId }
+    });
+  
     let isQuizPassed = false;
-    
+  
     if (sectionQuiz) {
-      // Tìm xem có bài nộp nào của Quiz này mà Điểm số >= Điểm đỗ (passScore) hay chưa
       const passedSubmission = await this.submissionRepo.findOne({
-        where: { 
-          userId: userId, 
-          quizId: sectionQuiz.id, 
-          score: MoreThanOrEqual(sectionQuiz.passScore) // <--- Điểm mấu chốt ở đây!
+        where: {
+          userId,
+          quizId: sectionQuiz.id,
+          score: MoreThanOrEqual(sectionQuiz.passScore)
         }
       });
-      isQuizPassed = !!passedSubmission; // Ép kiểu về boolean
+      isQuizPassed = !!passedSubmission;
     } else {
-      isQuizPassed = true; // Nếu chương này không có Quiz thì mặc định qua môn
+      // Không có quiz => auto pass
+      isQuizPassed = true;
     }
-
-    // 3. Tự động chốt sổ nếu thỏa cả 2 điều kiện!
+  
+    console.log(`=> Quiz Status: ${isQuizPassed ? 'ĐẬU' : 'RỚT/CHƯA THI'}`);
+  
+    // 4. Kiểm tra điều kiện hoàn thành section
+    const isAllLessonsDone = totalLessons > 0 && totalLessons === completedCount;
+  
     if (isAllLessonsDone && isQuizPassed) {
-      let sectionProgress = await this.sectionProgressRepo.findOne({
+      console.log('=> ĐỦ ĐIỀU KIỆN! TIẾN HÀNH LƯU...');
+  
+      // Check đã tồn tại chưa (tránh duplicate)
+      const existing = await this.sectionProgressRepo.findOne({
         where: { userId, sectionId }
       });
-
-      if (!sectionProgress) {
-        // Chưa có thì tạo mới
-        await this.sectionProgressRepo.save(
-          this.sectionProgressRepo.create({ userId, sectionId, isCompleted: true })
-        );
-      } else if (!sectionProgress.isCompleted) {
-        // Có rồi nhưng chưa complete thì update
-        sectionProgress.isCompleted = true;
-        sectionProgress.completedAt = new Date();
-        await this.sectionProgressRepo.save(sectionProgress);
+  
+      if (!existing) {
+        const newProgress = this.sectionProgressRepo.create({
+          userId,
+          sectionId,
+          isCompleted: true,
+          completedAt: new Date(),
+        });
+  
+        const saved = await this.sectionProgressRepo.save(newProgress);
+        console.log('=> ĐÃ LƯU THÀNH CÔNG! ID:', saved.id);
+      } else {
+        console.log('=> ĐÃ HOÀN THÀNH TRƯỚC ĐÓ (không tạo lại)');
       }
+  
+    } else {
+      console.log('=> KHÔNG ĐỦ ĐIỀU KIỆN:', {
+        isAllLessonsDone,
+        isQuizPassed
+      });
     }
+  
+    console.log('------------------------------------------------');
   }
 }

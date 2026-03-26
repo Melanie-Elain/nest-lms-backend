@@ -7,10 +7,11 @@ import { SectionProgress } from './entities/section-progress.entity';
 import { LessonProgress } from '../lessons/entities/lesson-progress.entity';
 import { Quiz } from 'src/examination/quizzes/entities/quiz.entity';
 import { Submission } from 'src/examination/submissions/entities/submission.entity';
+import { Lesson } from '../lessons/entities/lesson.entity';
 
 @Module({
   // 1. Đăng ký Entity Section vào TypeORM
-  imports: [TypeOrmModule.forFeature([Section, SectionProgress, LessonProgress, Quiz, Submission])],
+  imports: [TypeOrmModule.forFeature([Section, SectionProgress, LessonProgress, Quiz, Submission, Lesson])],
 
   // 2. Khai báo Controller để các endpoint của Section hiện lên Swagger
   controllers: [SectionsController],

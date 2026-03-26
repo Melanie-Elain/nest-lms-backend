@@ -87,28 +87,30 @@ export class SubmissionsService {
 
     await this.submissionRepo.save(submission);
 
+    console.log('--- DEBUG BẪY CHECK SECTION ---');
+    console.log('Quiz ID:', quiz.id);
+    console.log('Section ID của Quiz:', quiz.sectionId);
+    console.log('User ID từ Submission:', submission.userId);
+    console.log('Kết quả đậu/rớt:', isPassed);
+
     if (isPassed && quiz.sectionId) {
-      // Gọi ngầm hàm check để chốt sổ (không cần await để tránh làm chậm API)
-      this.sectionsService.evaluateSectionCompletion(submission.userId, quiz.sectionId)
-        .catch(err => console.error('Lỗi khi quét tiến độ chương:', err));
+      console.log('=> Đang tiến hành quét tiến độ chương...');
+      
+      await this.sectionsService.evaluateSectionCompletion(submission.userId, quiz.sectionId);
+      
+      console.log('=> Đã quét xong tiến độ chương!');
     }
-    // ==========================================
-    // TÍCH HỢP TÌM EMAIL USER THẬT (MỚI THÊM)
-    // ==========================================
-    // Lưu ý: Mình giả định trong entity Submission của bạn có cột 'userId'. 
-    // Nếu bạn đặt tên khác (như studentId), hãy sửa lại chữ 'userId' cho khớp nhé.
+    
     const user = await this.userRepo.findOne({ where: { id: submission.userId } });
     
     if (user && user.email) {
-      // Nếu tìm thấy user và user có email, ném job gửi mail vào Hàng đợi
       await this.emailQueue.add('send-score-email', {
-        email: user.email, // Lấy email động từ Database
+        email: user.email, 
         submissionId: submissionId,
         score: totalScore,
         message: 'Chúc mừng bạn đã hoàn thành bài thi!',
       });
     } else {
-      // Nếu không tìm thấy, có thể in ra log để debug chứ không chặn việc trả kết quả nộp bài
       console.warn(`Không tìm thấy email cho userId: ${submission.userId} để gửi thông báo điểm.`);
     }
 
