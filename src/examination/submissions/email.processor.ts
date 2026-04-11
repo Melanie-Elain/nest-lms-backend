@@ -17,7 +17,7 @@ export class EmailProcessor extends WorkerHost {
     // Rút trích dữ liệu mà file Service ném sang
     const { email, submissionId, score } = job.data;
     
-    this.logger.log(`\n[🔥 Bếp Trưởng] Đang soạn Email báo điểm gửi tới: ${email}...`);
+    this.logger.log(`\n Đang soạn Email báo điểm gửi tới: ${email}...`);
 
     try {
       // Gọi lệnh gửi Email thật
