@@ -11,10 +11,12 @@ import { User } from 'src/iam/users/entities/user.entity';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { SectionsModule } from 'src/learning/sections/sections.module';
+import { LessonProgress } from 'src/learning/lessons/entities/lesson-progress.entity';
+import { Lesson } from 'src/learning/lessons/entities/lesson.entity';
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Submission, SubmissionAnswer, Quiz, User]),
+    imports: [TypeOrmModule.forFeature([Submission, SubmissionAnswer, Quiz, User, Lesson, LessonProgress]),
       SectionsModule,
       BullModule.registerQueue({
         name: 'email-queue',

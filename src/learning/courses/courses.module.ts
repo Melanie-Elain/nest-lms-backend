@@ -6,18 +6,15 @@ import { CoursesController } from './courses.controller';
 import { ClassMember } from './entities/class-member.entity';
 import { Section } from '../sections/entities/section.entity';
 import { SectionProgress } from '../sections/entities/section-progress.entity';
+import { BullModule } from '@nestjs/bullmq';
+import { Certificate } from './entities/certificate.entity';
+import { User } from 'src/iam/users/entities/user.entity';
 
 @Module({
-  // 1. Đăng ký Entity Course để Repository có thể hoạt động
-  imports: [TypeOrmModule.forFeature([Course , ClassMember,Section,SectionProgress])],
-  
-  // 2. Khai báo Controller để nhận API
+  imports: [TypeOrmModule.forFeature([Course , ClassMember,Section,SectionProgress, Certificate, User]),
+  BullModule.registerQueue({ name: 'email-queue' })],
   controllers: [CoursesController],
-  
-  // 3. Khai báo Service để xử lý logic
   providers: [CoursesService],
-  
-  // 4. Xuất Service ra để các Module khác (như Quizzes của SV3) có thể dùng chung
   exports: [CoursesService],
 })
 export class CoursesModule {}

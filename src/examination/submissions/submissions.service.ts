@@ -9,27 +9,52 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { User } from '../../iam/users/entities/user.entity';
 import { SectionsService } from '../../learning/sections/sections.service';
+import { Lesson } from 'src/learning/lessons/entities/lesson.entity';
+import { LessonProgress } from 'src/learning/lessons/entities/lesson-progress.entity';
 
 @Injectable()
 export class SubmissionsService {
   constructor(
     @InjectRepository(Submission) private readonly submissionRepo: Repository<Submission>,
     @InjectRepository(Quiz) private readonly quizRepo: Repository<Quiz>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectQueue('email-queue') private readonly emailQueue: Queue,
     private readonly sectionsService: SectionsService,
+    @InjectRepository(Lesson) private readonly lessonRepo: Repository<Lesson>,
+    @InjectRepository(LessonProgress) private readonly lessonProgressRepo: Repository<any>, 
   ) {}
 
   async startQuiz(quizId: number, userId: number) {
+    // 1. Tìm thông tin đề thi
     const quiz = await this.quizRepo.findOne({ where: { id: quizId } });
     if (!quiz) throw new NotFoundException('Không tìm thấy đề thi');
-
+    if (quiz.sectionId) {
+      // A. Đếm tổng số bài học trong chương này
+      const totalLessons = await this.lessonRepo.count({
+        where: { sectionId: quiz.sectionId },
+      });
+  
+      const completedCount = await this.lessonProgressRepo
+        .createQueryBuilder('lp')
+        .innerJoin('lp.lesson', 'lesson')
+        .where('lp.user_id = :userId', { userId })
+        .andWhere('lp.is_completed = true')
+        .andWhere('lesson.section_id = :sectionId', { sectionId: quiz.sectionId })
+        .getCount();
+  
+      if (totalLessons > 0 && completedCount < totalLessons) {
+        throw new BadRequestException(
+          `Bạn chưa đủ điều kiện làm bài Quiz này. Hãy hoàn thành tất cả các bài học trước (${completedCount}/${totalLessons}).`
+        );
+      }
+    }
+  
+    
     const submission = this.submissionRepo.create({
       quizId: quizId,
       userId: userId,
     });
-    
+  
     return await this.submissionRepo.save(submission);
   }
 
@@ -93,13 +118,7 @@ export class SubmissionsService {
     console.log('User ID từ Submission:', submission.userId);
     console.log('Kết quả đậu/rớt:', isPassed);
 
-    if (isPassed && quiz.sectionId) {
-      console.log('=> Đang tiến hành quét tiến độ chương...');
-      
-      await this.sectionsService.evaluateSectionCompletion(submission.userId, quiz.sectionId);
-      
-      console.log('=> Đã quét xong tiến độ chương!');
-    }
+    
     
     const user = await this.userRepo.findOne({ where: { id: submission.userId } });
     
@@ -112,6 +131,14 @@ export class SubmissionsService {
       });
     } else {
       console.warn(`Không tìm thấy email cho userId: ${submission.userId} để gửi thông báo điểm.`);
+    }
+
+    if (isPassed && quiz.sectionId) {
+      console.log('=> Đang tiến hành quét tiến độ chương...');
+      
+      await this.sectionsService.evaluateSectionCompletion(submission.userId, quiz.sectionId);
+      
+      console.log('=> Đã quét xong tiến độ chương!');
     }
 
     return {

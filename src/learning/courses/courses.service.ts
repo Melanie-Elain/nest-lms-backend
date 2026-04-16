@@ -6,6 +6,10 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { ClassMember } from './entities/class-member.entity'; 
 import { SectionProgress } from '../sections/entities/section-progress.entity';
 import { Section } from '../sections/entities/section.entity';
+import { Certificate } from './entities/certificate.entity';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { User } from 'src/iam/users/entities/user.entity';
 
 @Injectable()
 export class CoursesService {
@@ -21,6 +25,14 @@ export class CoursesService {
 
     @InjectRepository(SectionProgress)
     private readonly sectionProgressRepo: Repository<SectionProgress>,
+
+    @InjectRepository(Certificate) 
+    private readonly certificateRepo: Repository<Certificate>,
+
+    @InjectQueue('email-queue') private readonly emailQueue: Queue,
+
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
+
   ) {}
 
 // Tạo khóa học mới
@@ -152,5 +164,76 @@ export class CoursesService {
           ? 'Đủ điều kiện dự thi Final Exam!' 
           : `Bạn mới hoàn thành ${progressPercentage}%. Cần đạt tối thiểu 80% để làm bài thi cuối khóa.`,
       };
+    }
+
+
+    async evaluateCourseCompletion(userId: number, courseId: number) {
+      try {
+        console.log(`\n[KIỂM TRA KHÓA HỌC] Đang quét tiến độ khóa học ID: ${courseId} cho User ID: ${userId}...`);
+    
+        // 1. Đếm tổng số chương (Sections) mà khóa học này có
+        const totalSections = await this.sectionRepo.count({
+          where: { courseId: courseId }
+        });
+    
+        // 2. Đếm số chương User đã hoàn thành (is_completed = true) thuộc khóa học này
+        // Dùng QueryBuilder để đảm bảo map đúng cột 'is_completed' và 'user_id'
+        const completedSections = await this.sectionProgressRepo.createQueryBuilder('sp')
+          .innerJoin('sp.section', 'section')
+          .where('sp.user_id = :userId', { userId })
+          .andWhere('sp.is_completed = true')
+          .andWhere('section.courseId = :courseId', { courseId })
+          .getCount();
+    
+        console.log(`=> Kết quả: ${completedSections}/${totalSections} chương.`);
+    
+        // 3. Nếu đã hoàn thành tất cả các chương
+        if (totalSections > 0 && completedSections === totalSections) {
+          console.log(`🎉 [CHÚC MỪNG] Học viên ${userId} đã hoàn thành 100% khóa học ${courseId}`);
+    
+          // KIỂM TRA TRÁNH CẤP TRÙNG (Nếu có rồi thì không lưu nữa)
+          const existingCert = await this.certificateRepo.findOne({
+            where: { userId, courseId }
+          });
+    
+          if (!existingCert) {
+            console.log('=> Đang khởi tạo và lưu chứng chỉ mới...');
+            
+            // Tạo object chứng chỉ mới
+            const newCert = this.certificateRepo.create({
+              userId: userId,
+              courseId: courseId,
+              // Lưu ý: Cột pdf_url trong DB của bạn là bắt buộc (Not Null)
+              pdfUrl: `https://lms-sgu.vn/view-cert/${userId}-${courseId}`, 
+              issuedAt: new Date(),
+            });
+    
+            await this.certificateRepo.save(newCert);
+            console.log('✅ ĐÃ GHI CHỨNG CHỈ VÀO DATABASE THÀNH CÔNG!');
+    
+            // 4. GỬI EMAIL THÔNG BÁO (Nếu User có email)
+            const user = await this.userRepo.findOne({ where: { id: userId } });
+            if (user && user.email) {
+              await this.emailQueue.add('send-certificate', { 
+                userId: userId, 
+                courseId: courseId,
+                email: user.email   
+              });
+              console.log(`=> Đã đẩy yêu cầu gửi Email tới ${user.email}`);
+            }
+          } else {
+            console.log('⚠️ Chứng chỉ đã tồn tại trong DB, bỏ qua bước lưu.');
+          }
+          
+          return true; 
+        }
+    
+        console.log('❌ Học viên chưa hoàn thành đủ số chương.');
+        return false;
+    
+      } catch (error) {
+        console.error('❌ Lỗi nghiêm trọng khi kiểm tra hoàn thành khóa học:', error.message);
+        return false;
+      }
     }
 }

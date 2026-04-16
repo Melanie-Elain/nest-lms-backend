@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Section } from './entities/section.entity';
@@ -8,6 +8,7 @@ import { LessonProgress } from '../lessons/entities/lesson-progress.entity';
 import { Submission } from 'src/examination/submissions/entities/submission.entity';
 import { Quiz } from 'src/examination/quizzes/entities/quiz.entity';
 import { Lesson } from '../lessons/entities/lesson.entity';
+import { CoursesService } from '../courses/courses.service';
 
 @Injectable()
 export class SectionsService {
@@ -19,6 +20,7 @@ export class SectionsService {
     @InjectRepository(Submission) private submissionRepo: Repository<Submission>,
     @InjectRepository(Quiz) private quizRepo: Repository<Quiz>,
     @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
+    private readonly coursesService: CoursesService,
 
   ) {}
 
@@ -116,6 +118,15 @@ export class SectionsService {
   
         const saved = await this.sectionProgressRepo.save(newProgress);
         console.log('=> ĐÃ LƯU THÀNH CÔNG! ID:', saved.id);
+        const currentSection = await this.sectionRepository.findOne({ 
+          where: { id: sectionId },
+          select: ['id', 'courseId'] 
+      });
+
+      // 2. Bắn tín hiệu sang CoursesService để nó kiểm tra tổng thể
+      if (currentSection && currentSection.courseId) {
+          await this.coursesService.evaluateCourseCompletion(userId, currentSection.courseId);
+      }
       } else {
         console.log('=> ĐÃ HOÀN THÀNH TRƯỚC ĐÓ (không tạo lại)');
       }

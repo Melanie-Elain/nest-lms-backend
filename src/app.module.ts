@@ -16,13 +16,12 @@ import { ExpressAdapter } from '@bull-board/express';
 
 @Module({
   imports: [
-    // 1. Đọc file .env
     ConfigModule.forRoot({ isGlobal: true }),
     BullBoardModule.forRoot({
       route: '/admin/queues', // Đường dẫn để vào trang Dashboard
       adapter: ExpressAdapter, // NestJS mặc định dùng Express dưới nền
     }),
-    // 2. Kết nối Postgres (Dùng forRootAsync để đọc được biến môi trường)
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -70,14 +69,11 @@ import { ExpressAdapter } from '@bull-board/express';
           port: 587,
           secure: false, 
           auth: {
-            // Thay bằng email thật của bạn
             user: config.get<string>('MAIL_USER', 'email_cua_ban@gmail.com'), 
-            // Thay bằng MẬT KHẨU ỨNG DỤNG 16 KÝ TỰ lấy ở Bước 1 (Ví dụ: 'abcdefghijklmnop')
             pass: config.get<string>('MAIL_PASS', 'mat_khau_ung_dung_16_ky_tu'), 
           },
         },
         defaults: {
-          // Tên người gửi hiển thị trong hộp thư đến
           from: '"Hệ thống LMS NestJS" <noreply@lms.com>', 
         },
       }),

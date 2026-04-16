@@ -58,7 +58,6 @@ export class LessonsService {
       throw new NotFoundException('Không tìm thấy bài học này');
     }
 
-    // 2. Lưu tiến độ bài học (Upsert: Chưa có thì tạo, có rồi thì cập nhật)
     let progress = await this.lessonProgressRepo.findOne({
       where: { lessonId, userId },
     });
