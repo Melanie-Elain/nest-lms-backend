@@ -2,7 +2,7 @@
 import { 
   Controller, Post, Body, Get, Param, Delete, 
   UseGuards, ParseIntPipe, Patch, BadRequestException,
-  UseInterceptors, UploadedFile 
+  UseInterceptors, UploadedFile, Req 
 } from '@nestjs/common';
 import { 
   ApiTags, ApiOperation, ApiBearerAuth, 
