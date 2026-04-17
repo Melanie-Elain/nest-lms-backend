@@ -14,6 +14,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { ExpressAdapter } from '@bull-board/express';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { CloudinaryModule } from './common/services/cloudinary.module'; // Kiểm tra lại đường dẫn cho đúng thư mục của Hồng nhé
 
 @Module({
   imports: [
@@ -47,7 +48,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
         ttl: 60000, 
       }),
     }),
-
+    CloudinaryModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -85,7 +86,7 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
     ExaminationModule,
     CoursesModule,
     SectionsModule,
-    LessonsModule
+    LessonsModule,
   ],
 })
 export class AppModule implements NestModule {
