@@ -21,7 +21,7 @@ export class AuthService {
         sub: user.id, 
         email: user.email, 
         role: user.role,
-        name: user.fullName 
+        full_name: user.full_name
       };
 
       const [accessToken, refreshToken] = await Promise.all([
