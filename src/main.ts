@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express'; // Quan trọng
 import { join } from 'path'; // Quan trọng
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -26,7 +27,9 @@ async function bootstrap() {
   
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+  app.useGlobalInterceptors(new TransformInterceptor());
 
+  // Cho phép gọi API từ các nguồn khác (nếu sau này Hồng làm Frontend)
   app.enableCors();
 
   await app.listen(process.env.PORT ?? 3000);

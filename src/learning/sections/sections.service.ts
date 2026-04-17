@@ -9,6 +9,7 @@ import { Submission } from 'src/examination/submissions/entities/submission.enti
 import { Quiz } from 'src/examination/quizzes/entities/quiz.entity';
 import { Lesson } from '../lessons/entities/lesson.entity';
 import { CoursesService } from '../courses/courses.service';
+import { CreateLessonDto } from '../lessons/dto/create-lesson.dto';
 
 @Injectable()
 export class SectionsService {
@@ -21,14 +22,34 @@ export class SectionsService {
     @InjectRepository(Quiz) private quizRepo: Repository<Quiz>,
     @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
     private readonly coursesService: CoursesService,
-
   ) {}
 
+  
   // Tạo chương học mới
-  async create(createSectionDto: CreateSectionDto) {
-    const section = this.sectionRepository.create(createSectionDto);
-    return await this.sectionRepository.save(section);
-  }
+async create(createSectionDto: CreateSectionDto) {
+  const { courseId, title } = createSectionDto;
+
+  // 1. Lấy số thứ tự lớn nhất hiện có của khóa học này
+  const lastSection = await this.sectionRepository.findOne({
+    where: { course: { id: courseId } },
+    order: { order: 'DESC' },
+  });
+
+  // 2. Tự động tính toán số order tiếp theo
+  const nextOrder = lastSection ? lastSection.order + 1 : 1;
+
+  // 3. Tự động định dạng lại tiêu đề: "Chương X: Tên chương"
+  const formattedTitle = `Chương ${nextOrder}: ${title}`;
+
+  // 4. Lưu vào Database
+  const section = this.sectionRepository.create({
+    title: formattedTitle,
+    order: nextOrder,
+    course: { id: courseId },
+  });
+
+  return await this.sectionRepository.save(section);
+}
 
   // Lấy danh sách chương của một khóa học, kèm theo các bài học bên trong
   async findAllByCourse(courseId: number) {
