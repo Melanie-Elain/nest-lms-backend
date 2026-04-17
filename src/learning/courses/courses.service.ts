@@ -232,7 +232,7 @@ export class CoursesService {
         return false;
     
       } catch (error) {
-        console.error('❌ Lỗi nghiêm trọng khi kiểm tra hoàn thành khóa học:', error.message);
+        // console.error('❌ Lỗi nghiêm trọng khi kiểm tra hoàn thành khóa học:', error.message);
         return false;
       }
     }
