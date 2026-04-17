@@ -6,11 +6,12 @@ import { LessonsController } from './lessons.controller';
 import { LessonsService } from './lessons.service';
 import { Lesson } from './entities/lesson.entity';
 import { CloudinaryModule } from 'src/common/services/cloudinary.module'; 
+import { LessonProgress } from './entities/lesson-progress.entity';
 
 @Module({
   imports: [
     // 1. Đăng ký Entity Lesson
-    TypeOrmModule.forFeature([Lesson]), 
+    TypeOrmModule.forFeature([Lesson, LessonProgress]), 
     
     // 2. Kết nối với Cloudinary
     CloudinaryModule, 
