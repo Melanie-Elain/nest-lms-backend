@@ -34,7 +34,7 @@ import { ExpressAdapter } from '@bull-board/express';
         password: config.get<string>('DB_PASSWORD'), 
         database: config.get<string>('DB_NAME', 'nest_lms_db'),
         autoLoadEntities: true, 
-        synchronize: true, // Đã bật lên true để tự tạo bảng từ Entity
+        synchronize: true, 
       }),
     }),
 

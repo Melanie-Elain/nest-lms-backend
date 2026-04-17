@@ -1,3 +1,5 @@
 {
-    "liveServer.settings.multiRootWorkspaceName": "nest-lms-backend"
+    "liveServer.settings.multiRootWorkspaceName": "nest-lms-backend",
+    "terminal.integrated.drawBoldTextInBrightColors": false,
+    "terminal.integrated.gpuAcceleration": "off"
 }

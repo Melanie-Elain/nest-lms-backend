@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from '../../../iam/users/entities/user.entity'; // Đường dẫn tới Entity của SV1
-
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne,
+ CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { User } from '../../../iam/users/entities/user.entity'; 
 @Entity('courses')
 export class Course {
   @PrimaryGeneratedColumn()

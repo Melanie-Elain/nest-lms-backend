@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, 
+CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('users') // Tên bảng trong SQL của bạn
+@Entity('users') 
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -8,7 +9,7 @@ export class User {
   @Column({ unique: true, nullable: false })
   email: string;
 
-  @Column({ select: false}) // select: false để bảo mật, không hiện password khi lấy data
+  @Column({ select: false}) 
   password: string;
 
   @Column({ name: 'full_name', nullable: true })
@@ -33,6 +34,4 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  // @Column({ name: 'full_name', nullable: true })
-  // full_name: string;
 }
