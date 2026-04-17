@@ -23,6 +23,7 @@ import { CoursesModule } from '../courses/courses.module';
 
     CoursesModule 
   ],
+  controllers: [SectionsController],  
   providers: [SectionsService],
   exports: [SectionsService],
 })
