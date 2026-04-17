@@ -1,22 +1,28 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Lesson } from './entities/lesson.entity';
-import { LessonsService } from './lessions.service'
+import { MulterModule } from '@nestjs/platform-express'; // Thêm dòng này
+import { memoryStorage } from 'multer'; // Thêm dòng này
 import { LessonsController } from './lessons.controller';
-import { LessonProgress } from './entities/lesson-progress.entity';
+import { LessonsService } from './lessons.service';
+import { Lesson } from './entities/lesson.entity';
+import { CloudinaryModule } from 'src/common/services/cloudinary.module'; 
 
 @Module({
-  // 1. Đăng ký Entity Lesson để Repository có thể hoạt động trong Service
-  imports: [TypeOrmModule.forFeature([Lesson, LessonProgress])],
-
-  // 2. Khai báo Controller để NestJS lộ trình (route) các API ra Swagger UI
+  imports: [
+    // 1. Đăng ký Entity Lesson
+    TypeOrmModule.forFeature([Lesson]), 
+    
+    // 2. Kết nối với Cloudinary
+    CloudinaryModule, 
+    
+    // 3. Cấu hình Multer để xử lý file (Lưu vào RAM)
+    MulterModule.register({
+      storage: memoryStorage(),
+    }),
+  ],
+  
   controllers: [LessonsController],
-
-  // 3. Khai báo Service để xử lý logic nghiệp vụ cho bài học
   providers: [LessonsService],
-
-  // 4. Xuất LessonsService nếu sau này bạn cần dùng ở các module khác 
-  // (Ví dụ: Module Progress để theo dõi tiến độ học tập của sinh viên)
   exports: [LessonsService],
 })
 export class LessonsModule {}
