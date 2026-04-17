@@ -81,7 +81,7 @@ export class CreateQuizDto {
     required: false 
   })
   @IsNumber()
-  @IsOptional() // Quan trọng: Để dùng chung cho cả Final Exam và Section Quiz
+  @IsOptional() 
   sectionId?: number;
 
   @ApiProperty({ 
