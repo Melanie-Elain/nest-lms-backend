@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Any, Repository } from 'typeorm';
 
@@ -11,6 +11,7 @@ import { User } from '../../iam/users/entities/user.entity';
 import { SectionsService } from '../../learning/sections/sections.service';
 import { Lesson } from 'src/learning/lessons/entities/lesson.entity';
 import { LessonProgress } from 'src/learning/lessons/entities/lesson-progress.entity';
+import { ClassMember } from 'src/learning/courses/entities/class-member.entity';
 
 @Injectable()
 export class SubmissionsService {
@@ -22,14 +23,23 @@ export class SubmissionsService {
     private readonly sectionsService: SectionsService,
     @InjectRepository(Lesson) private readonly lessonRepo: Repository<Lesson>,
     @InjectRepository(LessonProgress) private readonly lessonProgressRepo: Repository<any>, 
+    @InjectRepository(ClassMember)
+    private readonly classMemberRepo: Repository<ClassMember>,
   ) {}
 
   async startQuiz(quizId: number, userId: number) {
-    // 1. Tìm thông tin đề thi
     const quiz = await this.quizRepo.findOne({ where: { id: quizId } });
     if (!quiz) throw new NotFoundException('Không tìm thấy đề thi');
+    const enrollment = await this.classMemberRepo.findOne({
+      where: {
+          user_id: userId,
+          course_id: quiz.courseId
+      }
+    });
+    if (!enrollment) {
+      throw new ForbiddenException('Bạn chưa đăng ký khóa học này. Vui lòng tham gia khóa học trước khi làm bài tập!');
+    }
     if (quiz.sectionId) {
-      // A. Đếm tổng số bài học trong chương này
       const totalLessons = await this.lessonRepo.count({
         where: { sectionId: quiz.sectionId },
       });

@@ -10,6 +10,7 @@ import { Question } from '../questions/entities/question.entity';
 import { AddBankQuestionsDto } from './dto/add-bank-questions.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { Section } from 'src/learning/sections/entities/section.entity';
 
 @Injectable()
 export class QuizzesService {
@@ -27,9 +28,28 @@ export class QuizzesService {
     private submissionAnswerRepository: Repository<SubmissionAnswer>,
     
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+
+    @InjectRepository(Section)
+    private readonly sectionRepository: Repository<Section>,
   ) {}
 
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
+    if (createQuizDto.sectionId) {
+      const section = await this.sectionRepository.findOne({
+          where: { id: createQuizDto.sectionId }
+      });
+
+      if (!section) {
+          throw new NotFoundException(`Chương học (Section) ID ${createQuizDto.sectionId} không tồn tại!`);
+      }
+
+      // Kiểm tra xem Section đó có thuộc về CourseId trong DTO không
+      if (section.courseId !== createQuizDto.courseId) {
+          throw new BadRequestException(
+              `Chương học này thuộc về khóa học khác (Course ID: ${section.courseId}), không phải khóa học ID ${createQuizDto.courseId}`
+          );
+      }
+    }
     const quiz = this.quizRepository.create({
         ...createQuizDto,
         questions: createQuizDto.questions.map(q => ({

@@ -13,10 +13,11 @@ import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { SectionsModule } from 'src/learning/sections/sections.module';
 import { LessonProgress } from 'src/learning/lessons/entities/lesson-progress.entity';
 import { Lesson } from 'src/learning/lessons/entities/lesson.entity';
+import { ClassMember } from 'src/learning/courses/entities/class-member.entity';
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Submission, SubmissionAnswer, Quiz, User, Lesson, LessonProgress]),
+    imports: [TypeOrmModule.forFeature([Submission, SubmissionAnswer, Quiz, User, Lesson, LessonProgress, ClassMember]),
       SectionsModule,
       BullModule.registerQueue({
         name: 'email-queue',
