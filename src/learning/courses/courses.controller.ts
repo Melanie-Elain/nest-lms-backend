@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Patch, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -60,5 +60,27 @@ export class CoursesController {
     @ApiOperation({ summary: 'Lấy danh sách sinh viên đã tham gia khóa học (Chỉ GV/Admin)' })
     async getMembers(@Param('id') courseId: number) {
     return await this.coursesService.findMembersByCourse(courseId);
+    }
+
+     // Cập nhật khóa học (Chỉ giảng viên,admin và role mới đã thêm ở role.enum.ts CONTENT_MODERATOR = 'CONTENT_MODERATOR', )
+    @Patch(':id/update')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('INSTRUCTOR', 'ADMIN', 'CONTENT_MODERATOR')
+    @ApiOperation({ summary: 'Cập nhật khóa học (Chỉ giảng viên, admin và content moderator)' })
+    async update(
+      @Param('id') courseId: number,
+      @Body() updateCourseDto: any
+    ) {
+      return await this.coursesService.update(courseId, updateCourseDto);
+    }
+
+    @Delete(':id/delete')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('INSTRUCTOR', 'ADMIN')
+    @ApiOperation({ summary: 'Xóa khóa học (Chỉ giảng viên, admin' })
+    async remove(@Param('id') courseId: number) {
+      return await this.coursesService.remove(courseId);
     }
 }
