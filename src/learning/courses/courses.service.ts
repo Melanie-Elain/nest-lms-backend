@@ -61,6 +61,21 @@ export class CoursesService {
     return course;
   }
 
+  // Cập nhật khóa học
+  async update(courseId: number, updateCourseDto: any) {
+    const course = await this.courseRepository.findOne({ where: { id: courseId } });
+    if (!course) throw new NotFoundException('Không tìm thấy khóa học');
+    Object.assign(course, updateCourseDto);
+    return await this.courseRepository.save(course);
+  }
+
+  async remove(courseId: number) {
+    const course = await this.courseRepository.findOne({ where: { id: courseId } });
+    if (!course) throw new NotFoundException('Không tìm thấy khóa học');
+    await this.courseRepository.remove(course);
+    return { message: 'Xóa khóa học thành công!' };
+  }
+
 //   Đăng ký tham gia khóa học
     async enroll(courseId: number, userId: number) {
     // 1. Kiểm tra đã ghi danh chưa
@@ -236,4 +251,8 @@ export class CoursesService {
         return false;
       }
     }
+
+
+
+
 }
