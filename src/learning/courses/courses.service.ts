@@ -10,6 +10,7 @@ import { Certificate } from './entities/certificate.entity';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { User } from 'src/iam/users/entities/user.entity';
+import { UpdateCourseDto } from './dto/updateCourseDto';
 
 @Injectable()
 export class CoursesService {
@@ -235,5 +236,32 @@ export class CoursesService {
         // console.error('❌ Lỗi nghiêm trọng khi kiểm tra hoàn thành khóa học:', error.message);
         return false;
       }
+    }
+
+    async update(id: number, updateData: UpdateCourseDto) { // SỬA 'any' THÀNH 'UpdateCourseDto' Ở ĐÂY
+      const course = await this.courseRepository.preload({
+        id: id,
+        ...updateData,
+      });
+  
+      if (!course) {
+        throw new NotFoundException(`Không tìm thấy khóa học có ID ${id}`);
+      }
+  
+      return await this.courseRepository.save(course);
+  }
+
+    async remove(id: number) {
+      const course = await this.courseRepository.findOne({ where: { id: id } });
+      
+      if (!course) {
+        throw new NotFoundException(`Không tìm thấy khóa học có ID ${id}`);
+      }
+  
+      await this.courseRepository.remove(course);
+      
+      return {
+        message: `Đã xóa thành công khóa học ID ${id}`,
+      };
     }
 }

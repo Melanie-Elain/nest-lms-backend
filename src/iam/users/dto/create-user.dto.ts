@@ -17,10 +17,10 @@ export class CreateUserDto {
 
   @ApiProperty({ 
     example: 'STUDENT', 
-    enum: ['STUDENT', 'INSTRUCTOR', 'ADMIN'],
+    enum: ['STUDENT', 'INSTRUCTOR', 'ADMIN', 'CONTENT_MODERATOR'],
     required: false 
   })
   @IsOptional()
-  @IsEnum(['STUDENT', 'INSTRUCTOR', 'ADMIN'])
+  @IsEnum(['STUDENT', 'INSTRUCTOR', 'ADMIN','CONTENT_MODERATOR'])
   role?: string;
 }

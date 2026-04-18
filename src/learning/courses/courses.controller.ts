@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Patch, Delete } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../../iam/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../iam/auth/guards/roles.guard';
 import { Roles } from '../../iam/auth/decorators/roles.decorator';
 import { ActiveUser } from '../../common/decorators/active-user.decorator';
+import { UpdateCourseDto } from './dto/updateCourseDto';
 
 @ApiTags('Courses')
 @Controller('courses')
@@ -60,5 +61,24 @@ export class CoursesController {
     @ApiOperation({ summary: 'Lấy danh sách sinh viên đã tham gia khóa học (Chỉ GV/Admin)' })
     async getMembers(@Param('id') courseId: number) {
     return await this.coursesService.findMembersByCourse(courseId);
+    }
+
+    @Patch(':id')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('ADMIN', 'INSTRUCTOR', 'CONTENT_MODERATOR') 
+    async updateCourse(
+      @Param('id') id: string, 
+      @Body() updateDto: UpdateCourseDto 
+    ) {
+      return this.coursesService.update(+id, updateDto);
+    }
+
+    @Delete(':id')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('ADMIN', 'INSTRUCTOR') 
+    async deleteCourse(@Param('id') id: number) {
+      return await this.coursesService.remove(id);
     }
 }
