@@ -54,3 +54,8 @@ Tuyệt đối dùng pnpm: Không dùng npm để tránh tạo file lock thừa.
 Git Flow: Luôn git pull trước khi bắt đầu code.
 
 Common: Các guards, interceptors nằm trong src/common, hãy tận dụng thay vì viết lại.
+
+
+Thêm chức năng cập nhật và xóa courses ở controller, service , đã viết sẵn cập nhật và xóa khóa học, có viết hàm trong service nhưng dto chưa có, m làm cái này cho t đi 
+
+sửa luôn chức năng đăng kí được content... để test t chưa đăng kí được
