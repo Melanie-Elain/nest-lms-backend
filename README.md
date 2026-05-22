@@ -46,7 +46,7 @@ Sau khi chạy server, nhóm không cần dùng giao diện Frontend mà có th�
 
 🛠 Lệnh kiểm thử (Testing)
 Bash
-# Unit tests (Dành cho SV3 kiểm tra logic chấm điểm)
+# Unit tests (Kiểm tra logic chấm điểm)
 $ pnpm run test
 ⚠️ Quy tắc làm việc nhóm
 Tuyệt đối dùng pnpm: Không dùng npm để tránh tạo file lock thừa.
